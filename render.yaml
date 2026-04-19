@@ -1,0 +1,74 @@
+# Render Blueprint — provisions the entire StudentConnect production stack:
+#   1. PostgreSQL managed database
+#   2. Node.js web service for the Express API
+#   3. Static site for the Vite-built React client
+#
+# To deploy:
+#   1. Push this file to your GitHub repo's main branch
+#   2. On Render: New + → Blueprint → connect this repo
+#   3. Render reads render.yaml and creates everything automatically
+#   4. Auto-deploys are enabled by default for every push to main
+
+databases:
+  - name: studentconnect-db
+    plan: free
+    databaseName: studentconnect
+    user: studentconnect
+
+services:
+  # ---------------------------------------------------------------------------
+  # API server (Node.js / Express)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: studentconnect-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: studentconnect-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: API_RATE_LIMIT_MAX
+        value: "400"
+      - key: CORS_ORIGIN
+        sync: false # set this in the Render dashboard to your client URL after first deploy
+
+  # ---------------------------------------------------------------------------
+  # Client (React SPA, built with Vite, served as static files)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: studentconnect-client
+    runtime: static
+    plan: free
+    rootDir: client
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_URL
+        sync: false # set this in the Render dashboard to your API URL after first deploy
+    routes:
+      # SPA fallback: all unknown routes serve index.html (for client-side routing)
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

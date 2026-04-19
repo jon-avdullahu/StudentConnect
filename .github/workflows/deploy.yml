@@ -1,0 +1,52 @@
+name: Deploy to Render
+
+# Triggers ONLY on a push to main (i.e. after a PR is merged).
+# Render is also configured to auto-deploy from main via render.yaml,
+# so this workflow exists as a safety net + provides a visible, audited
+# deployment trail in GitHub Actions. If you do not set the secrets below,
+# the workflow simply skips with a friendly message.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-api:
+    name: Trigger Render API deploy
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+    steps:
+      - name: Trigger API deploy hook
+        env:
+          HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::RENDER_API_DEPLOY_HOOK secret not set. Skipping API deploy trigger."
+            echo "Render auto-deploys from main when render.yaml is connected, so this is optional."
+            exit 0
+          fi
+          echo "Pinging Render API deploy hook..."
+          curl -fsS -X POST "$HOOK"
+          echo "API deploy triggered."
+
+  deploy-client:
+    name: Trigger Render client deploy
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+    steps:
+      - name: Trigger client deploy hook
+        env:
+          HOOK: ${{ secrets.RENDER_CLIENT_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::RENDER_CLIENT_DEPLOY_HOOK secret not set. Skipping client deploy trigger."
+            echo "Render auto-deploys from main when render.yaml is connected, so this is optional."
+            exit 0
+          fi
+          echo "Pinging Render client deploy hook..."
+          curl -fsS -X POST "$HOOK"
+          echo "Client deploy triggered."
