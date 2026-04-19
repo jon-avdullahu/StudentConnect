@@ -1,4 +1,29 @@
-const API_BASE = import.meta.env.VITE_API_URL || '';
+/**
+ * Base URL for the StudentConnect API.
+ * - In development the Vite dev server proxies /api and /uploads, so an empty
+ *   string is correct.
+ * - In production the client is hosted on a different origin than the API, so
+ *   set `VITE_API_URL` (e.g. https://studentconnect-api.onrender.com) at build time.
+ */
+export const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+
+/** Build a fully-qualified URL for any API path (handles both dev and prod). */
+export function apiUrl(path) {
+  if (!path) return API_BASE;
+  return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
+/**
+ * Resolve a photo/asset URL returned by the API.
+ * Server-stored photos look like "/uploads/123-456.png". In production those
+ * live on the API origin, not the client origin, so we prefix them.
+ * Absolute URLs (https://...) are returned unchanged.
+ */
+export function assetUrl(url) {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+}
 
 /** Read body as text, then JSON; clear errors when the server returns HTML or an empty body (e.g. wrong proxy target). */
 export async function parseJsonResponse(res) {

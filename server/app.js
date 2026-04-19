@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -6,6 +7,11 @@ const { authMiddleware } = require('./middleware/auth');
 
 function createApp() {
   const app = express();
+
+  // Render (and most PaaS) put a reverse proxy in front of the app. Trusting it
+  // lets express-rate-limit see real client IPs and lets req.protocol report
+  // 'https' correctly behind the proxy.
+  app.set('trust proxy', 1);
 
   const allowedOrigins = (process.env.CORS_ORIGIN || '')
     .split(',')
@@ -18,8 +24,21 @@ function createApp() {
       credentials: true,
     })
   );
-  app.use(express.json());
-  app.use('/uploads', express.static('uploads'));
+  app.use(express.json({ limit: '1mb' }));
+
+  // Serve uploaded photos from an absolute path so the server works regardless
+  // of the cwd it was launched from. NOTE: on Render's free plan the disk is
+  // ephemeral — uploads are wiped on restart. Use object storage in production.
+  app.use(
+    '/uploads',
+    express.static(path.join(__dirname, 'uploads'), {
+      // Allow <img crossorigin> tags from the client domain to fetch these.
+      setHeaders(res) {
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Cache-Control', 'public, max-age=86400');
+      },
+    })
+  );
 
   if (process.env.NODE_ENV !== 'test') {
     const apiLimiter = rateLimit({

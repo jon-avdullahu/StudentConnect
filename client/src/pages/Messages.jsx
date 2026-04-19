@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
+  apiUrl,
   fetchConversations,
   fetchMessageThread,
   sendChatMessage,
@@ -245,7 +246,7 @@ export default function Messages() {
       return;
     }
     let cancelled = false;
-    fetch(`/api/listings/${effectiveListingId}`)
+    fetch(apiUrl(`/api/listings/${effectiveListingId}`))
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled && data?.title) setListing(data);

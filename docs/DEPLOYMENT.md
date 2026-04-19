@@ -130,6 +130,20 @@ For details on local Postgres setup, see [`README.md`](../README.md).
 
 ---
 
+## Known limitation — ephemeral file storage
+
+Render's free web-service plan uses an **ephemeral filesystem**: any file written to disk (including photos uploaded by landlords into `server/uploads/`) is wiped when the service restarts (which happens at every deploy and after ~15 minutes of inactivity on the free plan).
+
+**For a capstone demo this is acceptable** — uploads are stored in Postgres as URL paths and the API still serves them while the dyno is warm. For real production traffic, swap multer's disk storage for object storage:
+
+- **Cloudinary** — generous free tier, drop-in for image uploads
+- **AWS S3** / **Backblaze B2** / **Cloudflare R2** — cheap S3-compatible object stores
+- **Render Persistent Disks** — works but moves you to a paid plan
+
+The change is isolated to `server/routes/listings.js` (multer storage engine) and doesn't affect the rest of the codebase.
+
+---
+
 ## Rollbacks
 
 Render keeps a deploy history per service. To roll back:
