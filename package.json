@@ -1,0 +1,13 @@
+{
+  "name": "studentconnect",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n server,client -c \"#38bdf8,#c084fc\" \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "test": "npm test --prefix server",
+    "lint": "npm run lint --prefix client",
+    "build": "npm run build --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
