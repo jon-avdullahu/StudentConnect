@@ -12,6 +12,8 @@
 databases:
   - name: studentconnect-db
     plan: free
+    region: frankfurt # MUST match the API service's region — Render's internal
+                       # Postgres DNS only resolves within the same region.
     databaseName: studentconnect
     user: studentconnect
 
