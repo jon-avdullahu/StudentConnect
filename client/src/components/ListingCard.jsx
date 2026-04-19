@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
+import { assetUrl } from '../api';
 import { useLocale } from '../context/LocaleContext';
 
 export default function ListingCard({ listing }) {
   const { t } = useLocale();
-  const photoUrl = listing.photos && listing.photos.length > 0 
-    ? listing.photos[0] 
+  const photoUrl = listing.photos && listing.photos.length > 0
+    ? assetUrl(listing.photos[0])
     : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800';
 
   const ownerName = (listing.owner_full_name || '').trim() || t('listing.ownerFallback');

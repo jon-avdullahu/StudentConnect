@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { apiUrl } from '../api';
 import { useLocale } from '../context/LocaleContext';
 
 export default function Register() {
@@ -18,7 +19,7 @@ export default function Register() {
     
     try {
       const payload = { ...formData, role };
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

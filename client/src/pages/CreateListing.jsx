@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { parseJsonResponse } from '../api';
+import { apiUrl, parseJsonResponse } from '../api';
 import { useLocale } from '../context/LocaleContext';
 
 function readAuthed() {
@@ -92,7 +92,7 @@ export default function CreateListing() {
         payload.append('photos', file);
       });
 
-      const res = await fetch('/api/listings', {
+      const res = await fetch(apiUrl('/api/listings'), {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`

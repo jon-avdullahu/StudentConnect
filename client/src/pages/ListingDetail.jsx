@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { parseJsonResponse } from '../api';
+import { apiUrl, assetUrl, parseJsonResponse } from '../api';
 import { useLocale } from '../context/LocaleContext';
 import { useTeam } from '../context/TeamContext';
 import ReportModal from '../components/ReportModal';
@@ -44,7 +44,7 @@ export default function ListingDetail() {
       setError('');
       setActivePhoto(0);
       try {
-        const res = await fetch(`/api/listings/${id}`);
+        const res = await fetch(apiUrl(`/api/listings/${id}`));
         const data = await parseJsonResponse(res);
         if (!cancelled) setListing(data);
       } catch (e) {
@@ -93,7 +93,9 @@ export default function ListingDetail() {
     );
   }
 
-  const photos = Array.isArray(listing.photos) && listing.photos.length > 0 ? listing.photos : [PLACEHOLDER];
+  const photos = Array.isArray(listing.photos) && listing.photos.length > 0
+    ? listing.photos.map(assetUrl)
+    : [PLACEHOLDER];
   const mainSrc = photos[activePhoto] || PLACEHOLDER;
   const ownerName = (listing.owner_full_name || '').trim() || t('listing.ownerFallback');
   const ownerId = listing.owner_id;

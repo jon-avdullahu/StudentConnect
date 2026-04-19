@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getAuthHeaders, parseJsonResponse } from '../api';
+import { apiUrl, getAuthHeaders, parseJsonResponse } from '../api';
 import { useLocale } from '../context/LocaleContext';
 
 export default function ReportModal({ entityType, entityId, onClose }) {
@@ -14,7 +14,7 @@ export default function ReportModal({ entityType, entityId, onClose }) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/reports', {
+      const res = await fetch(apiUrl('/api/reports'), {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({

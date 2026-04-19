@@ -12,21 +12,49 @@ function parsePgUrl(urlString) {
       user: (u.username || '').trim() || undefined,
       password,
       database: u.pathname ? u.pathname.slice(1).replace(/%2F/g, '/').trim() : undefined,
+      sslmode: u.searchParams.get('sslmode') || '',
     };
   } catch {
     return null;
   }
 }
 
+// Decide whether to enable SSL.
+// - If DATABASE_URL has ?sslmode=require (or similar), enable it.
+// - In production (Render, Heroku, Railway), enable it by default.
+// - Otherwise, leave SSL off for local development.
+function buildSslConfig(parsed) {
+  const explicit = (parsed?.sslmode || '').toLowerCase();
+  const wantsSsl =
+    explicit === 'require' ||
+    explicit === 'verify-ca' ||
+    explicit === 'verify-full' ||
+    process.env.NODE_ENV === 'production' ||
+    process.env.PG_SSL === 'true';
+  if (!wantsSsl) return false;
+  // Render's managed Postgres uses a self-signed cert chain — accept it.
+  return { rejectUnauthorized: false };
+}
+
 const parsed = connectionString ? parsePgUrl(connectionString) : null;
+const ssl = buildSslConfig(parsed);
+
 const pool = new Pool(
   parsed
     ? {
-        ...parsed,
+        host: parsed.host,
+        port: parsed.port,
+        user: parsed.user,
         password: String(parsed.password ?? ''),
+        database: parsed.database,
+        ssl,
       }
     : { connectionString: undefined }
 );
+
+pool.on('error', (err) => {
+  console.error('Unexpected Postgres pool error:', err.message);
+});
 
 const initDb = async () => {
   const client = await pool.connect();
@@ -44,8 +72,8 @@ const initDb = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      DO $$ 
-      BEGIN 
+      DO $$
+      BEGIN
         BEGIN
           ALTER TABLE users ADD COLUMN role VARCHAR(50) DEFAULT 'student';
         EXCEPTION

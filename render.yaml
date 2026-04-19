@@ -49,7 +49,8 @@ services:
   - type: web
     name: studentconnect-client
     runtime: static
-    plan: free
+    # NOTE: do NOT specify `plan` for static sites — Render rejects it.
+    # Static sites are free and don't have plan tiers.
     rootDir: client
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { apiUrl } from '../api';
 import { useLocale } from '../context/LocaleContext';
 
 export default function Login() {
@@ -17,7 +18,7 @@ export default function Login() {
     setIsLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

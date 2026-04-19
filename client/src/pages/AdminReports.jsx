@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { getAuthHeaders, parseJsonResponse } from '../api';
+import { apiUrl, getAuthHeaders, parseJsonResponse } from '../api';
 import { useLocale } from '../context/LocaleContext';
 
 function readStoredUser() {
@@ -41,7 +41,7 @@ export default function AdminReports() {
     setLoading(true);
     try {
       const q = statusFilter ? `?status=${statusFilter}` : '';
-      const res = await fetch(`/api/reports${q}`, { headers: getAuthHeaders() });
+      const res = await fetch(apiUrl(`/api/reports${q}`), { headers: getAuthHeaders() });
       const data = await parseJsonResponse(res);
       setReports(Array.isArray(data) ? data : []);
     } catch {
@@ -58,7 +58,7 @@ export default function AdminReports() {
   const updateStatus = async (id, newStatus) => {
     setUpdatingId(id);
     try {
-      const res = await fetch(`/api/reports/${id}/status`, {
+      const res = await fetch(apiUrl(`/api/reports/${id}/status`), {
         method: 'PUT',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: newStatus }),

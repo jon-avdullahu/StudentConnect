@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import ListingCard from '../components/ListingCard';
+import { apiUrl } from '../api';
 import { useLocale } from '../context/LocaleContext';
 
 export default function Home() {
@@ -20,7 +21,7 @@ export default function Home() {
     if (minPrice) q.set('min_price', minPrice);
     if (maxPrice) q.set('max_price', maxPrice);
     const qs = q.toString();
-    fetch(`/api/listings${qs ? `?${qs}` : ''}`)
+    fetch(apiUrl(`/api/listings${qs ? `?${qs}` : ''}`))
       .then(res => res.json())
       .then(data => {
         setListings(Array.isArray(data) ? data : []);
