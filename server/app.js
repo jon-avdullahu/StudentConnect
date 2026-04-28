@@ -5,6 +5,12 @@ const rateLimit = require('express-rate-limit');
 
 const { authMiddleware } = require('./middleware/auth');
 
+function maintenanceEnabled() {
+  if (process.env.NODE_ENV === 'test') return false;
+  const v = String(process.env.MAINTENANCE_MODE || '').toLowerCase().trim();
+  return v === '1' || v === 'true' || v === 'yes';
+}
+
 function createApp() {
   const app = express();
 
@@ -25,6 +31,17 @@ function createApp() {
     })
   );
   app.use(express.json({ limit: '1mb' }));
+
+  // Flip MAINTENANCE_MODE=true in Render to reject traffic without deleting the service.
+  // /healthz stays 200 so the platform health check still passes. OPTIONS is allowed so
+  // browsers can surface the 503 on the follow-up request cleanly.
+  app.use((req, res, next) => {
+    if (!maintenanceEnabled()) return next();
+    if (req.method === 'OPTIONS') return next();
+    if (req.path === '/healthz') return next();
+    res.set('Retry-After', '3600');
+    res.status(503).json({ error: 'Service temporarily unavailable.', maintenance: true });
+  });
 
   // Serve uploaded photos from an absolute path so the server works regardless
   // of the cwd it was launched from. NOTE: on Render's free plan the disk is
